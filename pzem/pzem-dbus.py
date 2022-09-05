@@ -30,30 +30,93 @@ softwareVersion = '0.1'
 AC_INPUT=0
 AC_OUTPUT=1
 
+class DbusMockMultiplusService:
+    def __init__(self, devname, device):
+        self.imported = {}
+        self.bus = (dbus.SessionBus(private=True) if 'DBUS_SESSION_BUS_ADDRESS' in os.environ else dbus.SystemBus(private=True))
+        self._dbusservice = VeDbusService("com.victronenergy.vebus.mock-multiplus-%s-%s" % (devname, device['name']), bus=self.bus)
+        self.bus.add_signal_receiver(self.dbus_name_owner_changed, signal_name='NameOwnerChanged')
+
+        self._error_message = ""
+        self._disconnect = 0
+
+        # Create the management objects, as specified in the ccgx dbus-api document
+        self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
+        self._dbusservice.add_path('/Mgmt/ProcessVersion', softwareVersion)
+        self._dbusservice.add_path('/Mgmt/Connection', "Mock-Multiplus device %s" % (devname,))
+
+        # Create the mandatory objects
+        self._dbusservice.add_path('/DeviceInstance', device['name'])
+        self._dbusservice.add_path('/ProductId', device['name'])
+        self._dbusservice.add_path('/ProductName', "MockMultiplus")
+        self._dbusservice.add_path('/FirmwareVersion', 0)
+        self._dbusservice.add_path('/HardwareVersion', 0)
+        self._dbusservice.add_path('/Connected', 0)
+
+        # Readings
+        if device['input']:
+            self._dbusservice.add_path('/DC/0/Current', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/DC/0/Power', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/DC/0/Temperature', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/DC/0/Voltage', 0, gettextcallback=self._get_text)
+        self._dbusservice.add_path('/DeviceType', "MockMultiplus")
+        self._dbusservice.add_path('/ErrorCode', 0, gettextcallback=self._get_text)
+        self._dbusservice.add_path('/ErrorMessage', "")
+
+    def update(self, _instr):
+        try:
+            pass
+        except Exception as e:
+            self._dbusservice['/ErrorCode']         = 1
+            self._dbusservice['/ErrorMessage']      = str(e)
+            if self._disconnect > 60:
+                self._dbusservice['/Connected']     = 0
+            self._disconnect += 1
+            self._error_message = str(e)
+
+    def _get_text(self, path, value):
+        if path == "/ErrorCode": return self._error_message
+        elif path.startswith("/Energy/"): return ("%.3FkWh" % (float(value) / 1000.0))
+        else: return ("%.0F" % (float(value)))
+
+    def dbus_name_owner_changed(self, name, oldOwner, newOwner):
+        # decouple, and process in main loop
+        idle_add(self.process_name_owner_changed, name, oldOwner, newOwner)
+
+    def process_name_owner_changed(self, name, oldOwner, newOwner):
+        logging.debug('D-Bus name owner changed. Name: %s, oldOwner: %s, newOwner: %s' % (name, oldOwner, newOwner))
+
+        if newOwner != '':
+            self.scan_dbus_service(name)
+        else:
+            pass # Would remove imported service/path
+
 class DbusPzemService:
     def __init__(self, tty, devices):
         self._services = {}
         self._instruments = {}
         devname = os.path.basename(tty)
 
-        for addr in devices:
-            if devices[addr] == 'grid':
-                self._services[addr] = DbusPzemGridMeterService(devname, addr)
-                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
-            elif devices[addr] == 'inverter0':
-                self._services[addr] = DbusPzemInverterService(devname, addr, position=AC_INPUT)
-                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
-            elif devices[addr] == 'inverter':
-                self._services[addr] = DbusPzemInverterService(devname, addr)
-                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
-            elif devices[addr] == 'pzem-016':
-                self._services[addr] = DbusPzem016Service(devname, addr)
-                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
-            elif devices[addr] == 'mock-multiplus':
-                self._services[addr] = DbusMockMultiplusService(devname, addr)
-                self._instruments[addr] = None
+        for device in devices:
+            if devices[device]['type'] == 'inverter':
+                self._services[devices[device]['name']] = DbusMockMultiplusService(devname, devices[device])
+#            if devices[addr] == 'grid':
+#                self._services[addr] = DbusPzemGridMeterService(devname, addr)
+#                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
+#            elif devices[addr] == 'inverter0':
+#                self._services[addr] = DbusPzemInverterService(devname, addr, position=AC_INPUT)
+#                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
+#            elif devices[addr] == 'inverter':
+#                self._services[addr] = DbusPzemInverterService(devname, addr)
+#                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
+#            elif devices[addr] == 'pzem-016':
+#                self._services[addr] = DbusPzem016Service(devname, addr)
+#                self._instruments[addr] = pzem.Instrument(tty, addr, 'ac')
+#            elif devices[addr] == 'mock-multiplus':
+#                self._services[addr] = DbusMockMultiplusService(devname, addr)
+#                self._instruments[addr] = None
             else:
-                raise Exception("Unknown device type %s" % devices[addr])
+                raise Exception("Unknown device type %s" % devices[device].get('type', 'Not Specified'))
 
         gobject.timeout_add(1000, self._update)
 
