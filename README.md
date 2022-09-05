@@ -12,7 +12,7 @@ State Of Charge (SOC), Voltage & Current values to the inverter so that your ser
  * [BMS Types supported](https://github.com/Louisvdw/dbus-serialbattery/wiki/BMS-types-supported)
  * [FAQ](https://github.com/Louisvdw/dbus-serialbattery/wiki/FAQ)
  * [Features](https://github.com/Louisvdw/dbus-serialbattery/wiki/Features)
- * [How to install](https://github.com/Louisvdw/dbus-serialbattery/wiki/How-to-install)
+ * [How to install](https://github.com/ngardiner/dbus-serialbattery-withpzem/tree/withpzem/docs/install.md)
  * [Troubleshoot](https://github.com/Louisvdw/dbus-serialbattery/wiki/Troubleshoot)
 
 ### Donations:
