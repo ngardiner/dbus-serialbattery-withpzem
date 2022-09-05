@@ -1,0 +1,9 @@
+[
+  {
+    "type": "inverter",
+    "name": "Inverter1",
+    "inputs": {
+      "dc-input": 12
+    }
+  }
+]
