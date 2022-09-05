@@ -54,11 +54,17 @@ class DbusMockMultiplusService:
         self._dbusservice.add_path('/Connected', 0)
 
         # Readings
-        if device['input']:
-            self._dbusservice.add_path('/DC/0/Current', 0, gettextcallback=self._get_text)
-            self._dbusservice.add_path('/DC/0/Power', 0, gettextcallback=self._get_text)
-            self._dbusservice.add_path('/DC/0/Temperature', 0, gettextcallback=self._get_text)
-            self._dbusservice.add_path('/DC/0/Voltage', 0, gettextcallback=self._get_text)
+        if device['inputs'].get('ac-input', 0):
+            self._dbusservice.add_path('/Ac/ActiveIn/L1/I', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/Ac/ActiveIn/L1/V', 0, gettextcallback=self._get_text)
+        if device['inputs'].get('ac-output', 0):
+            self._dbusservice.add_path('/Ac/Out/L1/I', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/Ac/Out/L1/V', 0, gettextcallback=self._get_text)
+        if device['inputs'].get('dc-input', 0):
+            self._dbusservice.add_path('/Dc/0/Current', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/Dc/0/Power', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/Dc/0/Temperature', 0, gettextcallback=self._get_text)
+            self._dbusservice.add_path('/Dc/0/Voltage', 0, gettextcallback=self._get_text)
         self._dbusservice.add_path('/DeviceType', "MockMultiplus")
         self._dbusservice.add_path('/ErrorCode', 0, gettextcallback=self._get_text)
         self._dbusservice.add_path('/ErrorMessage', "")
