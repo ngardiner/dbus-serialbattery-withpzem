@@ -3,6 +3,12 @@
 DRIVER=/opt/victronenergy/dbus-serialbattery
 RUN=/opt/victronenergy/service-templates/dbus-serialbattery
 OLD=/opt/victronenergy/service/dbus-serialbattery
+
+# Fix original directory layout
+if [ -f "/data/conf/serial-starter.d" ]; then
+  rm /data/conf/serial-starter.d
+fi
+
 if [ -d "$DRIVER" ]; then
   if [ -L "$DRIVER" ]; then
     # Remove old SymLink.
