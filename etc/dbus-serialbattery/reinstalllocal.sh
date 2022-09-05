@@ -40,3 +40,7 @@ fi
 
 cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery
 cp -rf /data/etc/dbus-serialbattery/service/* /opt/victronenergy/service-templates/dbus-serialbattery
+
+# Install pzem components
+rm -rf /opt/victronenergy/pzem
+cp -R /data/pzem /opt/victronenergy/pzem
