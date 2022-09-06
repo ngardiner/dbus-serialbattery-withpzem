@@ -1,7 +1,9 @@
 #!/bin/sh
 
-DRIVER=/opt/victronenergy/dbus-serialbattery
-RUN=/opt/victronenergy/service-templates/dbus-serialbattery
+DRIVER_SERIAL=/opt/victronenergy/dbus-serialbattery
+DRIVER_PZEM=/opt/victronenergy/pzem
+RUN_SERIAL=/opt/victronenergy/service-templates/dbus-serialbattery
+RUN_PZEM=/opt/victronenergy/service-templates/pzem
 OLD=/opt/victronenergy/service/dbus-serialbattery
 
 # Fix original directory layout
@@ -9,38 +11,60 @@ if [ -f "/data/conf/serial-starter.d" ]; then
   rm /data/conf/serial-starter.d
 fi
 
-if [ -d "$DRIVER" ]; then
-  if [ -L "$DRIVER" ]; then
+if [ -d "$DRIVER_SERIAL" ]; then
+  if [ -L "$DRIVER_SERIAL" ]; then
     # Remove old SymLink.
-    rm "$DRIVER"
+    rm "$DRIVER_SERIAL"
     # Create as folder
-    mkdir "$DRIVER"
+    mkdir "$DRIVER_SERIAL"
   fi
 else
   # Create folder
-  mkdir "$DRIVER"
+  mkdir "$DRIVER_SERIAL"
 fi
-if [ -d "$RUN" ]; then
-  if [ -L "$RUN" ]; then
+if [ -d "$DRIVER_PZEM" ]; then
+  if [ -L "$DRIVER_PZEM" ]; then
     # Remove old SymLink.
-    rm "$RUN"
+    rm "$DRIVER_PZEM"
     # Create as folder
-    mkdir "$RUN"
+    mkdir "$DRIVER_PZEM"
   fi
 else
   # Create folder
-  mkdir "$RUN"
+  mkdir "$DRIVER_PZEM"
+fi
+if [ -d "$RUN_SERIAL" ]; then
+  if [ -L "$RUN_SERIAL" ]; then
+    # Remove old SymLink.
+    rm "$RUN_SERIAL"
+    # Create as folder
+    mkdir "$RUN_SERIAL"
+  fi
+else
+  # Create folder
+  mkdir "$RUN_SERIAL"
+fi
+if [ -d "$RUN_PZEM" ]; then
+  if [ -L "$RUN_PZEM" ]; then
+    # Remove old SymLink.
+    rm "$RUN_PZEM"
+    # Create as folder
+    mkdir "$RUN_PZEM"
+  fi
+else
+  # Create folder
+  mkdir "$RUN_PZEM"
 fi
 if [ -d "$OLD" ]; then
   if [ -L "$OLD" ]; then
     # Remove old SymLink.
-    rm "$RUN"
+    rm "$OLD"
   fi
 fi
 
-cp -f /data/etc/dbus-serialbattery/* /opt/victronenergy/dbus-serialbattery
-cp -rf /data/etc/dbus-serialbattery/service/* /opt/victronenergy/service-templates/dbus-serialbattery
+cp -f /data/etc/dbus-serialbattery/* $DRIVER_SERIAL/
+cp -rf /data/etc/dbus-serialbattery/service/* $RUN_SERIAL/
 
 # Install pzem components
-rm -rf /opt/victronenergy/pzem
-cp -R /data/pzem /opt/victronenergy/pzem
+cp -f /data/pzem/* $DRIVER_PZEM/
+cp -rf /data/pzem/service/ $RUN_PZEM/
