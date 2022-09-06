@@ -6,6 +6,11 @@ RUN_SERIAL=/opt/victronenergy/service-templates/dbus-serialbattery
 RUN_PZEM=/opt/victronenergy/service-templates/pzem
 OLD=/opt/victronenergy/service/dbus-serialbattery
 
+# Newer (2.80 and beyond) versions of VenusOS need the root fs remounted rw
+if [ -x "/opt/victronenergy/swupdate-scripts/remount-rw.sh" ]; then
+  /opt/victronenergy/swupdate-scripts/remount-rw.sh
+fi
+
 # Fix original directory layout
 if [ -f "/data/conf/serial-starter.d" ]; then
   rm /data/conf/serial-starter.d
@@ -64,6 +69,9 @@ fi
 
 cp -f /data/etc/dbus-serialbattery/* $DRIVER_SERIAL/
 cp -rf /data/etc/dbus-serialbattery/service/* $RUN_SERIAL/
+
+# Make scripts executable
+chmod +x /opt/victronenergy/dbus-serialbattery/dbus-serialbattery.py
 
 # Install pzem components
 cp -f /data/pzem/* $DRIVER_PZEM/
